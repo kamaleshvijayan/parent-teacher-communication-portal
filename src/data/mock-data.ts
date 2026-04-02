@@ -2,7 +2,7 @@ export interface Message {
   id: string;
   senderId: string;
   senderName: string;
-  senderRole: 'parent' | 'teacher';
+  senderRole: 'parent' | 'teacher' | 'admin';
   recipientId: string;
   recipientName: string;
   subject: string;

@@ -7,7 +7,7 @@ import { Mail, MailOpen, Trash2, Reply } from 'lucide-react';
 export function Messages() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { messages: allMessages } = useMessages();
+  const { messages: allMessages, deleteMessage } = useMessages();
   const [selectedTab, setSelectedTab] = useState<'inbox' | 'sent'>('inbox');
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
 
@@ -128,7 +128,15 @@ export function Messages() {
                           <Reply className="w-5 h-5" />
                         </button>
                       )}
-                      <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this message?')) {
+                            deleteMessage(selectedMessageData.id);
+                            setSelectedMessage(null);
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>

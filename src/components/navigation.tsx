@@ -12,12 +12,14 @@ export function Navigation() {
     navigate('/');
   };
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/messages', label: 'Messages', icon: MessageSquare },
-    { path: '/announcements', label: 'Announcements', icon: Bell },
-    { path: '/students', label: user?.role === 'teacher' ? 'Students' : 'My Children', icon: Users },
-  ];
+  const navItems = user?.role === 'admin' 
+    ? [ { path: '/admin', label: 'Admin Dashboard', icon: Home } ]
+    : [
+        { path: '/dashboard', label: 'Dashboard', icon: Home },
+        { path: '/messages', label: 'Messages', icon: MessageSquare },
+        { path: '/announcements', label: 'Announcements', icon: Bell },
+        { path: '/students', label: user?.role === 'teacher' ? 'Students' : 'My Children', icon: Users },
+      ];
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -48,13 +50,15 @@ export function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <Link
-              to="/compose"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            >
-              <PenSquare className="w-4 h-4 mr-2" />
-              New Message
-            </Link>
+            {user?.role !== 'admin' && (
+              <Link
+                to="/compose"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              >
+                <PenSquare className="w-4 h-4 mr-2" />
+                New Message
+              </Link>
+            )}
             <div className="flex items-center">
               <span className="text-sm text-gray-700 mr-4">
                 {user?.name} ({user?.role})

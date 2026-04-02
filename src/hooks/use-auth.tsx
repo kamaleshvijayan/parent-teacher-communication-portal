@@ -4,31 +4,35 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'parent' | 'teacher';
+  role: 'parent' | 'teacher' | 'admin';
 }
 
 interface AuthState {
   user: User | null;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
 }
 
 export const useAuth = create<AuthState>((set) => ({
   user: null,
-  login: (email: string, password: string) => {
-    // Mock authentication
-    if (email && password) {
-      const isTeacher = email.includes('teacher');
-      const user: User = {
-        id: isTeacher ? 't1' : 'p1',
-        name: isTeacher ? 'Ms. Sarah Johnson' : 'John Smith',
-        email: email,
-        role: isTeacher ? 'teacher' : 'parent',
-      };
-      set({ user });
-      return true;
+  login: async (email: string, password: string) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (response.ok) {
+        const user: User = await response.json();
+        set({ user });
+        return user;
+      }
+      return null;
+    } catch (error) {
+      console.error('Login error:', error);
+      return null;
     }
-    return false;
   },
   logout: () => set({ user: null }),
 }));

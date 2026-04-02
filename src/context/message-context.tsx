@@ -6,6 +6,7 @@ interface MessageContextType {
     sendMessage: (message: Omit<Message, 'id' | 'timestamp' | 'read'>) => void;
     markAsRead: (id: string) => void;
     updateMessage: (id: string, updates: Partial<Message>) => void;
+    deleteMessage: (id: string) => void;
 }
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined);
@@ -90,8 +91,26 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const deleteMessage = async (id: string) => {
+        try {
+            const response = await fetch(`http://localhost:5001/api/messages/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                setMessages(prev => prev.filter(msg => msg.id !== id));
+            } else {
+                console.error('Failed to delete message:', response.statusText);
+                alert(`Failed to delete message: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+            alert('Failed to delete message');
+        }
+    };
+
     return (
-        <MessageContext.Provider value={{ messages, sendMessage, markAsRead, updateMessage }}>
+        <MessageContext.Provider value={{ messages, sendMessage, markAsRead, updateMessage, deleteMessage }}>
             {children}
         </MessageContext.Provider>
     );

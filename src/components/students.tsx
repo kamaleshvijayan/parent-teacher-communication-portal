@@ -1,17 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
-import { mockStudents } from '../data/mock-data';
+import { Student } from '../data/mock-data';
 import { User, MessageSquare, BookOpen, GraduationCap, Mail, ChevronDown, ChevronUp, Award, Calendar, TrendingUp, Users } from 'lucide-react';
 
 export function Students() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [studentsData, setStudentsData] = useState<Student[]>([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/students')
+      .then(res => res.json())
+      .then(data => setStudentsData(data))
+      .catch(err => console.error(err));
+  }, []);
 
   const students = user?.role === 'teacher'
-    ? mockStudents
-    : mockStudents.filter(s => s.parentIds.includes(user?.id || ''));
+    ? studentsData.filter(s => s.teacherId === user.id)
+    : studentsData.filter(s => s.email === user?.email);
 
   const toggleExpanded = (studentId: string) => {
     setExpandedStudent(expandedStudent === studentId ? null : studentId);
@@ -204,11 +212,11 @@ export function Students() {
                       </div>
                     </div>
 
-                    {/* Behavior */}
+                    {/* Academic Performance */}
                     <div className="bg-white rounded-lg p-4 shadow-sm">
                       <div className="flex items-center mb-3">
                         <Award className="w-5 h-5 text-purple-600 mr-2" />
-                        <h4 className="text-sm font-semibold text-gray-900">Behavior</h4>
+                        <h4 className="text-sm font-semibold text-gray-900">Academic Performance</h4>
                       </div>
                       <div className="space-y-2">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getBehaviorBadge(student.behavior)}`}>
@@ -216,10 +224,10 @@ export function Students() {
                         </span>
                         <p className="text-xs text-gray-600 mt-2">
                           {student.behavior === 'excellent'
-                            ? 'Consistently demonstrates positive behavior and leadership'
+                            ? 'Consistently demonstrates strong academic performance'
                             : student.behavior === 'good'
-                              ? 'Generally follows class rules and participates well'
-                              : 'Working on improving classroom behavior'}
+                              ? 'Generally performs well and participates actively'
+                              : 'Working on improving academic performance'}
                         </p>
                       </div>
                     </div>

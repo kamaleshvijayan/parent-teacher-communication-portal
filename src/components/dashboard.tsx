@@ -8,6 +8,7 @@ export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +33,23 @@ export function Dashboard() {
       }
     };
 
+    const fetchStudents = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/students');
+        if (response.ok) {
+          const data = await response.json();
+          const userStudents = user.role === 'teacher'
+            ? data.filter((s: any) => s.teacherId === user.id)
+            : data.filter((s: any) => s.email === user.email);
+          setStudents(userStudents);
+        }
+      } catch (error) {
+        console.error('Failed to fetch students:', error);
+      }
+    };
+
     fetchMessages();
+    fetchStudents();
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
   }, [user, navigate]);
@@ -58,7 +75,7 @@ export function Dashboard() {
     },
     {
       title: user.role === 'teacher' ? 'Students' : 'Children',
-      value: user.role === 'teacher' ? 24 : 2,
+      value: loading ? '...' : students.length,
       icon: Users,
       color: 'bg-purple-500',
       action: () => navigate('/students'),

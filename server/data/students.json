@@ -1,0 +1,121 @@
+[
+  {
+    "id": "s1",
+    "name": "Emma Smith",
+    "grade": "5th Grade",
+    "className": "Room 204",
+    "teacherId": "t1",
+    "teacherName": "Ms. Sarah Johnson",
+    "parentIds": [
+      "p1"
+    ],
+    "email": "emma.smith@school.com",
+    "attendance": 96,
+    "behavior": "excellent",
+    "recentMarks": [
+      {
+        "subject": "Mathematics",
+        "grade": "A",
+        "score": 92,
+        "maxScore": 100,
+        "date": "2026-02-08",
+        "type": "test"
+      },
+      {
+        "subject": "Science",
+        "grade": "A-",
+        "score": 88,
+        "maxScore": 100,
+        "date": "2026-02-07",
+        "type": "quiz"
+      }
+    ]
+  },
+  {
+    "id": "s1773027329781",
+    "recentMarks": [],
+    "attendance": 100,
+    "behavior": "good",
+    "name": "kamalesh",
+    "email": "vijayan@parent.com",
+    "grade": "5th Grade",
+    "teacherId": "t1",
+    "teacherName": "Ms. Sarah Johnson",
+    "parentIds": [
+      "p1"
+    ]
+  },
+  {
+    "id": "s1773027348205",
+    "recentMarks": [],
+    "attendance": 100,
+    "behavior": "good",
+    "name": "Alice Smith",
+    "email": "parentalice@school.com",
+    "grade": "1st Grade",
+    "teacherId": "t1",
+    "teacherName": "Ms. Sarah Johnson",
+    "parentIds": [
+      "p1"
+    ]
+  },
+  {
+    "id": "s1773027443591",
+    "recentMarks": [],
+    "attendance": 100,
+    "behavior": "good",
+    "name": "Alice Smith",
+    "email": "parentalice@school.com",
+    "grade": "1st Grade",
+    "teacherId": "t1773027325729",
+    "teacherName": "Mr. Smith",
+    "parentIds": [
+      "p1"
+    ]
+  },
+  {
+    "id": "s1773027819281",
+    "recentMarks": [],
+    "attendance": 100,
+    "behavior": "good",
+    "name": "harish",
+    "email": "siva@parent.com",
+    "grade": "4th Grade",
+    "teacherId": "t1",
+    "teacherName": "Ms. Sarah Johnson",
+    "parentIds": [
+      "p1"
+    ]
+  },
+  {
+    "id": "s1773028699513",
+    "recentMarks": [
+      {
+        "subject": "mayhs",
+        "type": "homework",
+        "score": 75,
+        "maxScore": 100,
+        "grade": "b",
+        "date": "2026-03-09"
+      },
+      {
+        "subject": "science",
+        "type": "homework",
+        "score": 80,
+        "maxScore": 100,
+        "grade": "A",
+        "date": "2026-03-09"
+      }
+    ],
+    "attendance": 87,
+    "behavior": "needs improvement",
+    "name": "kalai",
+    "email": "karpu@parent.com",
+    "grade": "3rd Grade",
+    "teacherId": "t1",
+    "teacherName": "Ms. Sarah Johnson",
+    "parentIds": [
+      "p1"
+    ]
+  }
+]

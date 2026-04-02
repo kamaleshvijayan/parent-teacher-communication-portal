@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { useMessages } from '../context/message-context';
@@ -11,32 +11,57 @@ export function Compose() {
   const location = useLocation();
   const replyTo = location.state?.replyTo;
 
-  const [recipient, setRecipient] = useState(replyTo?.senderName || '');
+  const [recipient, setRecipient] = useState(replyTo?.recipientId || '');
   const [subject, setSubject] = useState(replyTo ? `Re: ${replyTo.subject}` : '');
   const [message, setMessage] = useState('');
   const [student, setStudent] = useState(replyTo?.studentName || '');
+  const [availableRecipients, setAvailableRecipients] = useState<{id: string, name: string}[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<{name: string}[]>([]);
 
   const { sendMessage } = useMessages();
+
+  useEffect(() => {
+    // Fetch users for recipients dropdown
+    fetch('http://localhost:5001/api/users')
+      .then(res => res.json())
+      .then(users => {
+        if (user?.role === 'teacher') {
+          setAvailableRecipients(users.filter((u: any) => u.role === 'parent').map((u: any) => ({ id: u.id, name: u.name })));
+        } else if (user?.role === 'parent') {
+          setAvailableRecipients(users.filter((u: any) => u.role === 'teacher').map((u: any) => ({ id: u.id, name: u.name })));
+        }
+      });
+
+    // Fetch students for students dropdown
+    fetch('http://localhost:5001/api/students')
+      .then(res => res.json())
+      .then(students => {
+        if (user?.role === 'teacher') {
+          setAvailableStudents(students.filter((s: any) => s.teacherId === user.id).map((s: any) => ({ name: s.name })));
+        } else if (user?.role === 'parent') {
+          setAvailableStudents(students.filter((s: any) => s.email === user.email).map((s: any) => ({ name: s.name })));
+        }
+      });
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    // Simple mock mapping for recipient IDs
-    let recipientId = 'unknown';
-    if (recipient.includes('Emma Smith') || recipient === 'John Smith') recipientId = 'p1';
-    else if (recipient.includes('Michael Brown') || recipient === 'Lisa Brown') recipientId = 'p2';
-    else if (recipient.includes('Sophia Garcia')) recipientId = 'p3';
-    else if (recipient === 'Ms. Sarah Johnson') recipientId = 't1';
-    else if (recipient === 'Mr. David Anderson') recipientId = 't2';
-    else if (recipient === 'Ms. Emily Chen') recipientId = 't3';
+    if (!recipient) {
+      alert("Please select a recipient.");
+      return;
+    }
+
+    const selectedRecipientObj = availableRecipients.find(r => r.id === recipient);
+    const recipientName = selectedRecipientObj ? selectedRecipientObj.name : 'Unknown';
 
     sendMessage({
       senderId: user.id,
       senderName: user.name,
       senderRole: user.role,
-      recipientId,
-      recipientName: recipient,
+      recipientId: recipient,
+      recipientName: recipientName,
       subject,
       content: message,
       studentName: student
@@ -44,14 +69,6 @@ export function Compose() {
 
     navigate('/messages');
   };
-
-  const availableRecipients = user?.role === 'teacher'
-    ? ['Parent of Emma Smith', 'Parent of Michael Brown', 'Parent of Sophia Garcia']
-    : ['Ms. Sarah Johnson', 'Mr. David Anderson', 'Ms. Emily Chen'];
-
-  const availableStudents = user?.role === 'teacher'
-    ? mockStudents.map(s => s.name)
-    : ['Emma Smith', 'Liam Smith'];
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -83,7 +100,7 @@ export function Compose() {
             >
               <option value="">Select recipient...</option>
               {availableRecipients.map((r) => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
           </div>
@@ -101,7 +118,7 @@ export function Compose() {
             >
               <option value="">Select student...</option>
               {availableStudents.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s.name} value={s.name}>{s.name}</option>
               ))}
             </select>
           </div>

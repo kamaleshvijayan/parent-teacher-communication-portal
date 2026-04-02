@@ -1,0 +1,44 @@
+[
+  {
+    "id": "a1",
+    "name": "System Admin",
+    "email": "admin@school.com",
+    "password": "demo",
+    "role": "admin"
+  },
+  {
+    "id": "t1",
+    "name": "Ms. Sarah Johnson",
+    "email": "teacher@school.com",
+    "password": "demo",
+    "role": "teacher"
+  },
+  {
+    "id": "p1",
+    "name": "John Smith",
+    "email": "parent@example.com",
+    "password": "demo",
+    "role": "parent"
+  },
+  {
+    "id": "t1773027325729",
+    "name": "Mr. Smith",
+    "email": "smith@school.com",
+    "password": "demo",
+    "role": "teacher"
+  },
+  {
+    "id": "p1773028699513",
+    "name": "Parent of kalai",
+    "email": "karpu@parent.com",
+    "password": "demo",
+    "role": "parent"
+  },
+  {
+    "id": "t1773029883176",
+    "name": "KAMALESH V",
+    "email": "kamal@teacher.com",
+    "password": "demo",
+    "role": "teacher"
+  }
+]

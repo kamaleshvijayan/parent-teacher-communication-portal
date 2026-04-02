@@ -6,6 +6,9 @@ import { Messages } from "./components/messages";
 import { Compose } from "./components/compose";
 import { Announcements } from "./components/announcements";
 import { Students } from "./components/students";
+import { AdminDashboard } from "./components/admin-dashboard";
+import { ManageTeachers } from "./components/manage-teachers";
+import { ManageStudents } from "./components/manage-students";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +21,9 @@ export const router = createBrowserRouter([
       { path: "compose", Component: Compose },
       { path: "announcements", Component: Announcements },
       { path: "students", Component: Students },
+      { path: "admin", Component: AdminDashboard },
+      { path: "admin/teachers", Component: ManageTeachers },
+      { path: "admin/students", Component: ManageStudents },
     ],
   },
 ]);
