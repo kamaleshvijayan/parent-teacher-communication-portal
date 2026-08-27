@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 export interface User {
   id: string;
   name: string;
@@ -14,10 +16,17 @@ interface AuthState {
 }
 
 export const useAuth = create<AuthState>((set) => ({
-  user: null,
+  user: (() => {
+    try {
+      const storedUser = localStorage.getItem('portal-user');
+      return storedUser ? JSON.parse(storedUser) as User : null;
+    } catch {
+      return null;
+    }
+  })(),
   login: async (email: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:5001/api/login', {
+      const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -25,6 +34,7 @@ export const useAuth = create<AuthState>((set) => ({
       
       if (response.ok) {
         const user: User = await response.json();
+        localStorage.setItem('portal-user', JSON.stringify(user));
         set({ user });
         return user;
       }
@@ -34,5 +44,8 @@ export const useAuth = create<AuthState>((set) => ({
       return null;
     }
   },
-  logout: () => set({ user: null }),
+  logout: () => {
+    localStorage.removeItem('portal-user');
+    set({ user: null });
+  },
 }));

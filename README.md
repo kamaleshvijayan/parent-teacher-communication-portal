@@ -7,6 +7,7 @@ A modern web application for seamless communication between parents and teachers
 - **Messaging System**: Send and receive messages between teachers and parents
 - **Role-Based Access**: Separate dashboards for teachers and parents
 - **Student Management**: Track student information and performance
+- **Face Attendance**: Teachers can enroll student face descriptors and mark daily attendance from a camera scan
 - **Real-Time Updates**: Messages are instantly saved and retrieved
 - **File-Based Backend**: No database installation required - uses JSON file storage
 
@@ -68,6 +69,10 @@ A modern web application for seamless communication between parents and teachers
    ```
    Frontend will run on `http://localhost:5173`
 
+### Face attendance setup
+
+Log in as a teacher and open **Face Attendance**. Start the camera, select a student, and capture an enrollment image. Later scans compare the browser-generated 128-value face descriptor against enrolled students; only a matching descriptor below the server threshold is marked present. Images are not uploaded or stored. The model weights are loaded from the face-api.js model host on first use, so the browser needs network access during model loading.
+
 ### Login Credentials
 
 **Teacher Account:**
@@ -111,6 +116,9 @@ Parent-Teacher-Communication-Portal/
 - `POST /api/messages` - Create a new message
 - `PATCH /api/messages/:id/read` - Mark message as read
 - `PATCH /api/messages/:id` - Update message content
+- `GET /api/attendance/today` - Retrieve today's face attendance records
+- `PUT /api/students/:id/face` - Save or replace a student's face descriptor
+- `POST /api/attendance/recognize` - Match a descriptor and record presence
 
 ## 🛠️ Development
 

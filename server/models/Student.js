@@ -18,6 +18,8 @@ const studentSchema = new mongoose.Schema({
   teacherId: String,
   teacherName: String,
   parentIds: [String],
+  faceDescriptor: { type: [Number], select: false },
+  faceEnrolledAt: Date,
   attendance: { type: Number, default: 100 },
   behavior: String,
   recentMarks: [markSchema]

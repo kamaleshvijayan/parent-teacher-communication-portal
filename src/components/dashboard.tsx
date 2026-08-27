@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/use-auth';
 import { MessageSquare, Bell, Users, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Message } from '../data/mock-data';
+import { ATTENDANCE_UPDATED_EVENT, getAttendanceRecords, getStudentAttendanceStats } from '../data/local-attendance';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ export function Dashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [presentIds, setPresentIds] = useState<string[]>([]);
+  const [attendanceDays, setAttendanceDays] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -50,13 +53,22 @@ export function Dashboard() {
 
     fetchMessages();
     fetchStudents();
+    const updateAttendance = () => {
+      const records = getAttendanceRecords();
+      setAttendanceDays(Object.keys(records).length);
+      setPresentIds(records[new Date().toISOString().slice(0, 10)] || []);
+    };
+    updateAttendance();
+    window.addEventListener(ATTENDANCE_UPDATED_EVENT, updateAttendance);
     const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); window.removeEventListener(ATTENDANCE_UPDATED_EVENT, updateAttendance); };
   }, [user, navigate]);
 
   if (!user) return null;
 
   const unreadMessages = messages.filter(m => !m.read).length;
+  const totalPresentDays = students.reduce((total, student) => total + getStudentAttendanceStats(student.id).presentDays, 0);
+  const totalAbsentDays = students.reduce((total, student) => total + getStudentAttendanceStats(student.id).absentDays, 0);
 
   const stats = [
     {
@@ -78,6 +90,34 @@ export function Dashboard() {
       value: loading ? '...' : students.length,
       icon: Users,
       color: 'bg-purple-500',
+      action: () => navigate('/students'),
+    },
+    {
+      title: 'Present Today',
+      value: loading ? '...' : user.role === 'teacher' ? presentIds.filter(id => students.some(student => student.id === id)).length : students.filter(student => presentIds.includes(student.id)).length,
+      icon: Calendar,
+      color: 'bg-emerald-500',
+      action: () => navigate('/students'),
+    },
+    {
+      title: 'Tracked Attendance Days',
+      value: loading ? '...' : attendanceDays,
+      icon: Calendar,
+      color: 'bg-amber-500',
+      action: () => navigate('/students'),
+    },
+    {
+      title: 'Present Days',
+      value: loading ? '...' : totalPresentDays,
+      icon: Calendar,
+      color: 'bg-green-600',
+      action: () => navigate('/students'),
+    },
+    {
+      title: 'Absent Days',
+      value: loading ? '...' : totalAbsentDays,
+      icon: Calendar,
+      color: 'bg-red-500',
       action: () => navigate('/students'),
     },
     {

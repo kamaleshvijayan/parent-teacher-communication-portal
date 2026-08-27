@@ -1,0 +1,151 @@
+[
+  {
+    "_id": "69ae64d2ae0580cfe80d303f",
+    "id": "s1773036754225",
+    "name": "kamalesh",
+    "grade": "1st Grade",
+    "email": "vijayan@parent.com",
+    "teacherId": "t1773036709995",
+    "teacherName": "Mr.Hari",
+    "parentIds": [
+      "p1773036754043"
+    ],
+    "attendance": 97,
+    "behavior": "good",
+    "recentMarks": [
+      {
+        "subject": "uyf",
+        "type": "test",
+        "score": 1,
+        "maxScore": 100,
+        "grade": "A",
+        "date": "2026-04-06",
+        "_id": "69d3735c9b5ce92e0b1db4ec"
+      }
+    ],
+    "__v": 0
+  },
+  {
+    "_id": "69afb057e01e8bd8b854028b",
+    "id": "s1773121623777",
+    "name": "kalai",
+    "grade": "3rd Grade",
+    "email": "kalai@parent.com",
+    "teacherId": "t1773036709995",
+    "teacherName": "Mr.Hari",
+    "parentIds": [
+      "p1773121623157"
+    ],
+    "attendance": 87,
+    "behavior": "needs improvement",
+    "recentMarks": [
+      {
+        "subject": "evs",
+        "type": "test",
+        "score": 68,
+        "maxScore": 100,
+        "grade": "C",
+        "date": "2026-03-10",
+        "_id": "69afb057e01e8bd8b854028c"
+      },
+      {
+        "subject": "DBMS",
+        "type": "test",
+        "score": 89,
+        "maxScore": 100,
+        "grade": "A",
+        "date": "2026-03-10",
+        "_id": "69afb057e01e8bd8b854028d"
+      },
+      {
+        "subject": "aiml",
+        "type": "test",
+        "score": 75,
+        "maxScore": 100,
+        "grade": "B",
+        "date": "2026-03-10",
+        "_id": "69afb057e01e8bd8b854028e"
+      },
+      {
+        "subject": "os",
+        "type": "test",
+        "score": 59,
+        "maxScore": 100,
+        "grade": "C",
+        "date": "2026-03-10",
+        "_id": "69afb057e01e8bd8b854028f"
+      }
+    ],
+    "__v": 0
+  },
+  {
+    "_id": "69cdfef6b9a78ee735572648",
+    "id": "s1775107830192",
+    "name": "gokul",
+    "grade": "3rd Grade",
+    "email": "gokul@parent.com",
+    "teacherId": "t1775107755834",
+    "teacherName": "Mr Sundar",
+    "parentIds": [
+      "p1775107828911"
+    ],
+    "attendance": 90,
+    "behavior": "excellent",
+    "recentMarks": [
+      {
+        "subject": "cloud",
+        "type": "project",
+        "score": 85,
+        "maxScore": 100,
+        "grade": "A+",
+        "date": "2026-04-02",
+        "_id": "69cdfef6b9a78ee735572649"
+      }
+    ],
+    "__v": 0
+  },
+  {
+    "_id": "69d372a29b5ce92e0b1db47d",
+    "id": "s1775465122731",
+    "name": "shanjay",
+    "grade": "2nd Grade",
+    "email": "shanjay@parent.com",
+    "teacherId": "t1773036709995",
+    "teacherName": "Mr.Hari",
+    "parentIds": [
+      "p1775465122626"
+    ],
+    "attendance": 87,
+    "behavior": "needs improvement",
+    "recentMarks": [
+      {
+        "subject": "cloud",
+        "type": "test",
+        "score": 78,
+        "maxScore": 100,
+        "grade": "B",
+        "date": "2026-04-06",
+        "_id": "69d372a29b5ce92e0b1db47e"
+      },
+      {
+        "subject": "OS",
+        "type": "test",
+        "score": 65,
+        "maxScore": 100,
+        "grade": "B",
+        "date": "2026-04-06",
+        "_id": "69d372a29b5ce92e0b1db47f"
+      },
+      {
+        "subject": "COMPLIER DESIGN",
+        "type": "test",
+        "score": 84,
+        "maxScore": 100,
+        "grade": "A",
+        "date": "2026-04-06",
+        "_id": "69d372a29b5ce92e0b1db480"
+      }
+    ],
+    "__v": 0
+  }
+]

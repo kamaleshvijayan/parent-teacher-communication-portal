@@ -1,0 +1,83 @@
+[
+  {
+    "_id": "69ae644fae0580cfe80d3025",
+    "id": "a1",
+    "name": "System Admin",
+    "email": "admin@school.com",
+    "password": "demo",
+    "role": "admin",
+    "__v": 0
+  },
+  {
+    "_id": "69ae6450ae0580cfe80d3028",
+    "id": "t1",
+    "name": "Ms. Sarah Johnson",
+    "email": "teacher@school.com",
+    "password": "demo",
+    "role": "teacher",
+    "__v": 0
+  },
+  {
+    "_id": "69ae6451ae0580cfe80d302c",
+    "id": "p1",
+    "name": "John Smith",
+    "email": "parent@example.com",
+    "password": "demo",
+    "role": "parent",
+    "__v": 0
+  },
+  {
+    "_id": "69ae64a5ae0580cfe80d3039",
+    "id": "t1773036709995",
+    "name": "Mr.Hari",
+    "email": "hari@school.com",
+    "password": "demo",
+    "role": "teacher",
+    "__v": 0
+  },
+  {
+    "_id": "69ae64d2ae0580cfe80d303d",
+    "id": "p1773036754043",
+    "name": "Parent of kamalesh",
+    "email": "vijayan@parent.com",
+    "password": "demo",
+    "role": "parent",
+    "__v": 0
+  },
+  {
+    "_id": "69afb057e01e8bd8b8540288",
+    "id": "p1773121623157",
+    "name": "Parent of kalai",
+    "email": "kalai@parent.com",
+    "password": "demo",
+    "role": "parent",
+    "__v": 0
+  },
+  {
+    "_id": "69cdfeabb9a78ee73557263e",
+    "id": "t1775107755834",
+    "name": "Mr Sundar",
+    "email": "sundar@school.com",
+    "password": "demo",
+    "role": "teacher",
+    "__v": 0
+  },
+  {
+    "_id": "69cdfef4b9a78ee735572642",
+    "id": "p1775107828911",
+    "name": "Parent of gokul",
+    "email": "gokul@parent.com",
+    "password": "demo",
+    "role": "parent",
+    "__v": 0
+  },
+  {
+    "_id": "69d372a29b5ce92e0b1db47b",
+    "id": "p1775465122626",
+    "name": "Parent of kamalesh",
+    "email": "kamal@parent.com",
+    "password": "kamal7726",
+    "role": "parent",
+    "__v": 0
+  }
+]

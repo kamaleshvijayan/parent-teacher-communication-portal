@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
-import { UserPlus, UserCheck, Shield, Plus, Trash2, Users, GraduationCap, Settings } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { UserPlus, UserCheck, Shield, Plus, Trash2, Users, GraduationCap, Settings, Megaphone, Camera, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import * as faceapi from 'face-api.js';
+import { FACE_PROFILES_KEY } from '../data/local-attendance';
+
+const FACE_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
 interface Teacher {
   id: string;
@@ -26,6 +30,13 @@ export function AdminDashboard() {
   const [attendance, setAttendance] = useState<number>(100);
   const [behavior, setBehavior] = useState<string>('good');
   const [marks, setMarks] = useState<Mark[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [modelsReady, setModelsReady] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [capturingFace, setCapturingFace] = useState(false);
+  const [faceMessage, setFaceMessage] = useState('No face captured yet.');
 
   const addMark = () => {
     setMarks([...marks, { subject: '', type: 'test', score: 0, maxScore: 100, grade: 'A', date: new Date().toISOString().split('T')[0] }]);
@@ -44,7 +55,48 @@ export function AdminDashboard() {
   // Fetch teachers on component mount
   useEffect(() => {
     fetchTeachers();
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL),
+    ]).then(() => setModelsReady(true)).catch(() => setFaceMessage('Face model failed to load. Check your network and reload.'));
+    return () => stopFaceCamera();
   }, []);
+
+  const stopFaceCamera = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+    setCameraReady(false);
+  };
+
+  const startFaceCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraReady(true);
+      setFaceMessage('Camera ready. Center the student\'s face, then capture.');
+    } catch {
+      setFaceMessage('Camera permission is required to capture the student face.');
+    }
+  };
+
+  const captureStudentFace = async () => {
+    if (!cameraReady) { setFaceMessage('Start the camera first.'); return; }
+    if (!modelsReady) { setFaceMessage('Face model is still loading. Please wait.'); return; }
+    setCapturingFace(true);
+    try {
+      const detection = await faceapi.detectSingleFace(videoRef.current!, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 })).withFaceLandmarks().withFaceDescriptor();
+      if (!detection) throw new Error('No clear face found. Look at the camera and improve the lighting.');
+      setFaceDescriptor(Array.from(detection.descriptor));
+      setFaceMessage('Face captured. You can now create the student profile.');
+    } catch (error) {
+      setFaceMessage(error instanceof Error ? error.message : 'Face capture failed.');
+    } finally { setCapturingFace(false); }
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -99,11 +151,16 @@ export function AdminDashboard() {
     const email = formData.get('email') as string; // parent email
     const grade = formData.get('grade') as string;
     const teacherId = formData.get('teacherId') as string;
+    const parentPassword = formData.get('parentPassword') as string;
     
     // Find the teacher by id to get their name
     const teacher = teachers.find(t => t.id === teacherId);
     if (!teacher) {
       alert('Teacher was not found. Please select a valid teacher.');
+      return;
+    }
+    if (!faceDescriptor) {
+      alert('Please start the camera and take a face snapshot before creating the student.');
       return;
     }
     
@@ -117,6 +174,7 @@ export function AdminDashboard() {
           grade, 
           teacherId: teacher.id,
           teacherName: teacher.name,
+          parentPassword,
           parentIds: ['p1'], // Default parent ID for demo purposes
           attendance: Number(attendance),
           behavior,
@@ -129,12 +187,19 @@ export function AdminDashboard() {
       });
 
       if (response.ok) {
+        const createdStudent = await response.json();
+        const profiles = JSON.parse(localStorage.getItem(FACE_PROFILES_KEY) || '{}');
+        profiles[createdStudent.id] = faceDescriptor;
+        localStorage.setItem(FACE_PROFILES_KEY, JSON.stringify(profiles));
         setStudentSuccess(true);
         setTimeout(() => setStudentSuccess(false), 3000);
         form.reset();
         setAttendance(100);
         setBehavior('good');
         setMarks([]);
+        setFaceDescriptor(null);
+        setFaceMessage('No face captured yet.');
+        stopFaceCamera();
       } else {
         const errData = await response.json();
         alert('Failed to add student: ' + errData.message);
@@ -157,8 +222,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <button 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <button
           onClick={() => navigate('/admin/teachers')}
           className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center text-left"
         >
@@ -171,7 +236,7 @@ export function AdminDashboard() {
           </div>
         </button>
 
-        <button 
+        <button
           onClick={() => navigate('/admin/students')}
           className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center text-left"
         >
@@ -181,6 +246,19 @@ export function AdminDashboard() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Manage Students</h3>
             <p className="text-gray-500 text-sm mt-1">View, edit, or remove student profiles and reassign teachers</p>
+          </div>
+        </button>
+
+        <button 
+          onClick={() => navigate('/admin/announcements')}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center text-left"
+        >
+          <div className="bg-orange-50 p-3 rounded-xl inline-block mb-4">
+            <Megaphone className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Manage Announcements</h3>
+            <p className="text-gray-500 text-sm mt-1">Create, view, or remove school wide announcements</p>
           </div>
         </button>
       </div>
@@ -234,9 +312,26 @@ export function AdminDashboard() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Student Full Name</label>
               <input name="name" required type="text" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="e.g. Michael Smith" />
             </div>
+
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Student Face Enrollment</label>
+              <div className="aspect-video max-h-56 bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+                <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+                {!cameraReady && <div className="text-center text-gray-300"><Camera className="w-8 h-8 mx-auto mb-1" /><p className="text-sm">Camera is off</p></div>}
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button type="button" onClick={cameraReady ? stopFaceCamera : startFaceCamera} className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-sm font-medium hover:bg-gray-50">{cameraReady ? 'Stop camera' : 'Start camera'}</button>
+                <button type="button" onClick={captureStudentFace} disabled={capturingFace} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">{capturingFace ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}{capturingFace ? 'Capturing...' : 'Take face snapshot'}</button>
+              </div>
+              <p className={`text-xs mt-2 ${faceDescriptor ? 'text-green-700' : 'text-gray-600'}`}>{faceMessage}</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email Address</label>
               <input name="email" required type="email" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="parent@example.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Parent Login Password</label>
+              <input name="parentPassword" required type="text" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Assign a password for parent login" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>

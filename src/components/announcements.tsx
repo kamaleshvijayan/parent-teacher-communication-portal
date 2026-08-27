@@ -1,15 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/use-auth';
-import { mockAnnouncements } from '../data/mock-data';
 import { Bell, AlertCircle, Calendar } from 'lucide-react';
+
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  category: 'general' | 'event' | 'urgent';
+  authorName: string;
+  authorId: string;
+  timestamp: string;
+}
 
 export function Announcements() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<'all' | 'general' | 'event' | 'urgent'>('all');
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAnnouncements = filter === 'all' 
-    ? mockAnnouncements 
-    : mockAnnouncements.filter(a => a.category === filter);
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/announcements');
+        if (response.ok) {
+          const data = await response.json();
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch announcements:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  const filteredAnnouncements = filter === 'all'
+    ? announcements
+    : announcements.filter(a => a.category === filter);
 
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);

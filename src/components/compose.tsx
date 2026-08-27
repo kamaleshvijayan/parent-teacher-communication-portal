@@ -15,34 +15,57 @@ export function Compose() {
   const [subject, setSubject] = useState(replyTo ? `Re: ${replyTo.subject}` : '');
   const [message, setMessage] = useState('');
   const [student, setStudent] = useState(replyTo?.studentName || '');
-  const [availableRecipients, setAvailableRecipients] = useState<{id: string, name: string}[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<{name: string}[]>([]);
+
+  const [allRecipients, setAllRecipients] = useState<{id: string, name: string}[]>([]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
 
   const { sendMessage } = useMessages();
 
   useEffect(() => {
-    // Fetch users for recipients dropdown
-    fetch('http://localhost:5001/api/users')
-      .then(res => res.json())
-      .then(users => {
-        if (user?.role === 'teacher') {
-          setAvailableRecipients(users.filter((u: any) => u.role === 'parent').map((u: any) => ({ id: u.id, name: u.name })));
-        } else if (user?.role === 'parent') {
-          setAvailableRecipients(users.filter((u: any) => u.role === 'teacher').map((u: any) => ({ id: u.id, name: u.name })));
-        }
-      });
+    Promise.all([
+      fetch('http://localhost:5001/api/users').then(res => res.json()),
+      fetch('http://localhost:5001/api/students').then(res => res.json())
+    ]).then(([users, students]) => {
+      if (user?.role === 'teacher') {
+        const teacherStudents = students.filter((s: any) => s.teacherId === user.id);
+        const relatedParentIds = new Set(teacherStudents.flatMap((s: any) => s.parentIds || []));
+        setAllStudents(teacherStudents);
 
-    // Fetch students for students dropdown
-    fetch('http://localhost:5001/api/students')
-      .then(res => res.json())
-      .then(students => {
-        if (user?.role === 'teacher') {
-          setAvailableStudents(students.filter((s: any) => s.teacherId === user.id).map((s: any) => ({ name: s.name })));
-        } else if (user?.role === 'parent') {
-          setAvailableStudents(students.filter((s: any) => s.email === user.email).map((s: any) => ({ name: s.name })));
-        }
-      });
+        // Filter unique parents
+        const uniqueRecipientsMap = new Map();
+        users.filter((u: any) => u.role === 'parent' && relatedParentIds.has(u.id)).forEach((u: any) => {
+            uniqueRecipientsMap.set(u.id, { id: u.id, name: u.name });
+        });
+        setAllRecipients(Array.from(uniqueRecipientsMap.values()));
+      } else if (user?.role === 'parent') {
+        const parentStudents = students.filter((s: any) => s.email === user.email || (s.parentIds && s.parentIds.includes(user.id)));
+        const relatedTeacherIds = new Set(parentStudents.map((s: any) => s.teacherId));
+        setAllStudents(parentStudents);
+
+        const uniqueRecipientsMap = new Map();
+        users.filter((u: any) => u.role === 'teacher' && relatedTeacherIds.has(u.id)).forEach((u: any) => {
+            uniqueRecipientsMap.set(u.id, { id: u.id, name: u.name });
+        });
+        setAllRecipients(Array.from(uniqueRecipientsMap.values()));
+      }
+    });
   }, [user]);
+
+  const visibleRecipients = allRecipients.filter(r => {
+    if (!student) return true;
+    const selectedStudent = allStudents.find(s => s.name === student);
+    if (!selectedStudent) return true;
+    if (user?.role === 'teacher') return selectedStudent.parentIds?.includes(r.id);
+    if (user?.role === 'parent') return selectedStudent.teacherId === r.id;
+    return true;
+  });
+
+  const visibleStudents = allStudents.filter(s => {
+    if (!recipient) return true;
+    if (user?.role === 'teacher') return s.parentIds?.includes(recipient);
+    if (user?.role === 'parent') return s.teacherId === recipient;
+    return true;
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +76,7 @@ export function Compose() {
       return;
     }
 
-    const selectedRecipientObj = availableRecipients.find(r => r.id === recipient);
+    const selectedRecipientObj = visibleRecipients.find(r => r.id === recipient);
     const recipientName = selectedRecipientObj ? selectedRecipientObj.name : 'Unknown';
 
     sendMessage({
@@ -99,7 +122,7 @@ export function Compose() {
               required
             >
               <option value="">Select recipient...</option>
-              {availableRecipients.map((r) => (
+              {visibleRecipients.map((r) => (
                 <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
@@ -117,7 +140,7 @@ export function Compose() {
               required
             >
               <option value="">Select student...</option>
-              {availableStudents.map((s) => (
+              {visibleStudents.map((s) => (
                 <option key={s.name} value={s.name}>{s.name}</option>
               ))}
             </select>

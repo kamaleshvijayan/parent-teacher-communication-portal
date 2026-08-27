@@ -9,6 +9,8 @@ import { Students } from "./components/students";
 import { AdminDashboard } from "./components/admin-dashboard";
 import { ManageTeachers } from "./components/manage-teachers";
 import { ManageStudents } from "./components/manage-students";
+import { ManageAnnouncements } from "./components/manage-announcements";
+import { FaceAttendance } from "./components/face-attendance";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +26,8 @@ export const router = createBrowserRouter([
       { path: "admin", Component: AdminDashboard },
       { path: "admin/teachers", Component: ManageTeachers },
       { path: "admin/students", Component: ManageStudents },
+      { path: "admin/announcements", Component: ManageAnnouncements },
+      { path: "attendance", Component: FaceAttendance },
     ],
   },
 ]);

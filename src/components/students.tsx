@@ -3,18 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Student } from '../data/mock-data';
 import { User, MessageSquare, BookOpen, GraduationCap, Mail, ChevronDown, ChevronUp, Award, Calendar, TrendingUp, Users } from 'lucide-react';
+import { ATTENDANCE_UPDATED_EVENT, getStudentAttendanceStats, getTodayPresentIds } from '../data/local-attendance';
 
 export function Students() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [studentsData, setStudentsData] = useState<Student[]>([]);
+  const [presentIds, setPresentIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch('http://localhost:5001/api/students')
       .then(res => res.json())
       .then(data => setStudentsData(data))
       .catch(err => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    const updateAttendance = () => setPresentIds(getTodayPresentIds());
+    updateAttendance();
+    window.addEventListener(ATTENDANCE_UPDATED_EVENT, updateAttendance);
+    return () => window.removeEventListener(ATTENDANCE_UPDATED_EVENT, updateAttendance);
   }, []);
 
   const students = user?.role === 'teacher'
@@ -69,6 +78,7 @@ export function Students() {
         {students.map((student) => {
           const isExpanded = expandedStudent === student.id;
           const avgScore = calculateAverageScore(student.recentMarks);
+          const attendanceStats = getStudentAttendanceStats(student.id);
 
           return (
             <div key={student.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -102,8 +112,16 @@ export function Students() {
                           {student.behavior}
                         </span>
                         <span className="text-sm text-gray-600">
-                          Attendance: <span className="font-semibold">{student.attendance}%</span>
+                          Attendance: <span className="font-semibold">{attendanceStats.totalDays ? Math.round((attendanceStats.presentDays / attendanceStats.totalDays) * 100) : student.attendance}%</span>
                         </span>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${presentIds.includes(student.id) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {presentIds.includes(student.id) ? 'Present today' : 'Not marked today'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-gray-600">
+                        <span>Total: <strong>{attendanceStats.totalDays}</strong></span>
+                        <span className="text-green-700">Present: <strong>{attendanceStats.presentDays}</strong></span>
+                        <span className="text-red-700">Absent: <strong>{attendanceStats.absentDays}</strong></span>
                       </div>
                     </div>
                   </div>

@@ -6,6 +6,7 @@ interface Student {
   id: string;
   name: string;
   email: string; // Parent Email
+  parentPassword?: string;
   grade: string;
   teacherId: string;
   teacherName: string;
@@ -267,6 +268,17 @@ export function ManageStudents() {
                     required 
                     type="email" 
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Parent Login Password</label>
+                  <input
+                    name="parentPassword"
+                    value={editData.parentPassword || ''}
+                    onChange={(e) => setEditData({...editData, parentPassword: e.target.value})}
+                    type="text"
+                    placeholder="Leave blank to keep unchanged"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>

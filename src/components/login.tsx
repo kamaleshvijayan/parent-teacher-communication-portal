@@ -10,7 +10,7 @@ export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -19,7 +19,7 @@ export function Login() {
       return;
     }
 
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       navigate('/dashboard');
     } else {
@@ -27,14 +27,19 @@ export function Login() {
     }
   };
 
-  const quickLogin = (type: 'parent' | 'teacher' | 'admin') => {
+  const quickLogin = async (type: 'parent' | 'teacher' | 'admin') => {
+    setError('');
     const credentials = 
       type === 'teacher' ? { email: 'teacher@school.com', password: 'demo' } :
       type === 'admin' ? { email: 'admin@school.com', password: 'demo' } :
       { email: 'parent@example.com', password: 'demo' };
 
-    login(credentials.email, credentials.password);
-    navigate('/dashboard');
+    const user = await login(credentials.email, credentials.password);
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      setError('Demo login failed. Please make sure the backend server is running.');
+    }
   };
 
   return (
@@ -58,7 +63,10 @@ export function Login() {
               <div className="bg-white/10 p-4 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl">
                 <GraduationCap className="w-12 h-12 text-white" />
               </div>
-              <h1 className="ml-6 text-4xl font-bold tracking-tight text-white drop-shadow-sm">Parent-Teacher Portal</h1>
+              <div className="ml-6">
+                <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">SAPPS</h1>
+                <p className="mt-1 max-w-xs text-sm text-white/85">Smart Attendance and Performance Prediction System</p>
+              </div>
             </div>
 
             <h2 className="text-3xl font-light mb-6 leading-tight text-blue-50">

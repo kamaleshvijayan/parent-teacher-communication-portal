@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, MessageSquare, Bell, Users, LogOut, PenSquare } from 'lucide-react';
+import { Home, MessageSquare, Bell, Users, LogOut, PenSquare, ScanFace } from 'lucide-react';
 import { useAuth } from '../hooks/use-auth';
 
 export function Navigation() {
@@ -19,17 +19,18 @@ export function Navigation() {
         { path: '/messages', label: 'Messages', icon: MessageSquare },
         { path: '/announcements', label: 'Announcements', icon: Bell },
         { path: '/students', label: user?.role === 'teacher' ? 'Students' : 'My Children', icon: Users },
+        ...(user?.role === 'teacher' ? [{ path: '/attendance', label: 'Face Attendance', icon: ScanFace }] : []),
       ];
 
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
+        <div className="min-h-16 py-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <div className="flex min-w-0 items-center">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-semibold text-blue-600">ParentTeacher Portal</h1>
+              <h1 className="text-xl font-semibold text-blue-600 whitespace-nowrap">ParentTeacher Portal</h1>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div className="hidden sm:ml-6 sm:flex sm:flex-wrap sm:items-center sm:gap-x-6">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -49,11 +50,11 @@ export function Navigation() {
               })}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-shrink-0 items-center gap-4">
             {user?.role !== 'admin' && (
               <Link
                 to="/compose"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors whitespace-nowrap"
               >
                 <PenSquare className="w-4 h-4 mr-2" />
                 New Message

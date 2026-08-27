@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Student = require('./models/Student');
 const Message = require('./models/Message');
+const Announcement = require('./models/Announcement');
+const Attendance = require('./models/Attendance');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -20,17 +22,19 @@ async function startDatabase() {
         const mongoUri = process.env.MONGODB_URI;
         if (!mongoUri) {
             console.error('MONGODB_URI environment variable is missing.');
-            return;
+            return false;
         }
 
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB Atlas');
-        seedDatabase(); // Optional helper to seed initial data
+        await seedDatabase(); // Ensure demo accounts exist before login requests are handled.
+        return true;
     } catch (err) {
         console.error('MongoDB connection error:', err);
+        return false;
     }
 }
-startDatabase();
+const databaseReady = startDatabase();
 
 async function seedDatabase() {
     try {
@@ -74,10 +78,16 @@ async function seedDatabase() {
         console.error("Error seeding database:", err);
     }
 }
-
+app.get('/',(req,res)=>{
+    res.send("hi")
+})
 // --- AUTHENTICATION ---
 app.post('/api/login', async (req, res) => {
     try {
+        if (!(await databaseReady) || mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ message: 'Database is unavailable' });
+        }
+
         const { email, password } = req.body;
         const user = await User.findOne({ email, password });
         
@@ -176,6 +186,70 @@ app.get('/api/students', async (req, res) => {
     }
 });
 
+app.get('/api/attendance/today', async (req, res) => {
+    try {
+        const dateKey = new Date().toISOString().slice(0, 10);
+        const records = await Attendance.find({ dateKey }).sort({ createdAt: -1 });
+        res.json(records);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.put('/api/students/:id/face', async (req, res) => {
+    try {
+        const { descriptor } = req.body;
+        if (!Array.isArray(descriptor) || descriptor.length !== 128 || descriptor.some(value => typeof value !== 'number' || !Number.isFinite(value))) {
+            return res.status(400).json({ message: 'A valid 128-value face descriptor is required.' });
+        }
+
+        const student = await Student.findOneAndUpdate(
+            { id: req.params.id },
+            { faceDescriptor: descriptor, faceEnrolledAt: new Date() },
+            { new: true }
+        ).select('+faceDescriptor');
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+        res.json({ id: student.id, name: student.name, faceEnrolledAt: student.faceEnrolledAt });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.post('/api/attendance/recognize', async (req, res) => {
+    try {
+        const { descriptor } = req.body;
+        if (!Array.isArray(descriptor) || descriptor.length !== 128) {
+            return res.status(400).json({ message: 'A valid face descriptor is required.' });
+        }
+
+        const students = await Student.find({ faceDescriptor: { $exists: true, $ne: [] } }).select('+faceDescriptor');
+        let bestMatch = null;
+        let bestDistance = Number.POSITIVE_INFINITY;
+        for (const student of students) {
+            const distance = Math.sqrt(student.faceDescriptor.reduce((sum, value, index) => sum + Math.pow(value - descriptor[index], 2), 0));
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestMatch = student;
+            }
+        }
+
+        const threshold = 0.55;
+        if (!bestMatch || bestDistance > threshold) {
+            return res.status(404).json({ message: 'Face not recognized', distance: bestDistance === Number.POSITIVE_INFINITY ? null : bestDistance });
+        }
+
+        const dateKey = new Date().toISOString().slice(0, 10);
+        const record = await Attendance.findOneAndUpdate(
+            { studentId: bestMatch.id, dateKey },
+            { studentId: bestMatch.id, dateKey, status: 'present', confidence: Number((1 - bestDistance).toFixed(4)) },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        res.json({ student: { id: bestMatch.id, name: bestMatch.name, grade: bestMatch.grade }, distance: bestDistance, record });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 app.post('/api/students', async (req, res) => {
     try {
         const parentEmail = req.body.email;
@@ -188,7 +262,7 @@ app.post('/api/students', async (req, res) => {
                     id: 'p' + Date.now().toString(),
                     name: 'Parent of ' + req.body.name,
                     email: parentEmail,
-                    password: 'demo',
+                    password: req.body.parentPassword || 'demo',
                     role: 'parent'
                 });
                 await parentUser.save();
@@ -214,13 +288,37 @@ app.post('/api/students', async (req, res) => {
 app.put('/api/students/:id', async (req, res) => {
     try {
         const updateData = { ...req.body };
+        const parentPassword = updateData.parentPassword;
+        delete updateData.parentPassword;
+
+        const existingStudent = await Student.findOne({ id: req.params.id });
+        if (!existingStudent) return res.status(404).json({ message: 'Student not found' });
+
         const student = await Student.findOneAndUpdate(
             { id: req.params.id },
             updateData,
             { new: true }
         );
 
-        if (!student) return res.status(404).json({ message: 'Student not found' });
+        if (existingStudent.parentIds && existingStudent.parentIds.length > 0) {
+            const parentUpdate = {};
+            if (updateData.email) parentUpdate.email = updateData.email;
+            if (parentPassword) parentUpdate.password = parentPassword;
+            if (updateData.name) parentUpdate.name = 'Parent of ' + updateData.name;
+
+            if (Object.keys(parentUpdate).length > 0) {
+                await User.findOneAndUpdate(
+                    { id: existingStudent.parentIds[0] },
+                    parentUpdate
+                );
+            }
+        } else if (parentPassword && updateData.email) {
+            await User.findOneAndUpdate(
+                { email: updateData.email, role: 'parent' },
+                { password: parentPassword }
+            );
+        }
+
         res.json(student);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -309,6 +407,45 @@ app.delete('/api/messages/:id', async (req, res) => {
 
         if (!message) {
             return res.status(404).json({ message: 'Message not found' });
+        }
+
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// --- ANNOUNCEMENTS ---
+app.get('/api/announcements', async (req, res) => {
+    try {
+        const announcements = await Announcement.find().sort({ timestamp: -1 });
+        res.json(announcements);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.post('/api/announcements', async (req, res) => {
+    try {
+        const newAnnouncement = new Announcement({
+            id: 'a' + Date.now().toString(),
+            timestamp: new Date().toISOString(),
+            ...req.body
+        });
+
+        await newAnnouncement.save();
+        res.status(201).json(newAnnouncement);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+app.delete('/api/announcements/:id', async (req, res) => {
+    try {
+        const announcement = await Announcement.findOneAndDelete({ id: req.params.id });
+
+        if (!announcement) {
+            return res.status(404).json({ message: 'Announcement not found' });
         }
 
         res.status(204).send();
