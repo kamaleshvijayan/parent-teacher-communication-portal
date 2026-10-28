@@ -1,4 +1,6 @@
-# Parent-Teacher Communication Portal
+# SAPPS
+
+Smart Attendance and Performance Prediction System
 
 A modern web application for seamless communication between parents and teachers, built with React and Express.
 

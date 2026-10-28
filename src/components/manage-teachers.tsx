@@ -13,6 +13,7 @@ export function ManageTeachers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,12 +36,14 @@ export function ManageTeachers() {
     setEditingId(teacher.id);
     setEditName(teacher.name);
     setEditEmail(teacher.email);
+    setEditPassword('');
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditName('');
     setEditEmail('');
+    setEditPassword('');
   };
 
   const handleSave = async (id: string) => {
@@ -48,14 +51,18 @@ export function ManageTeachers() {
       const response = await fetch(`http://localhost:5001/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName, email: editEmail })
+        body: JSON.stringify({
+          name: editName,
+          email: editEmail,
+          ...(editPassword ? { password: editPassword } : {})
+        })
       });
       
       if (response.ok) {
         setTeachers(teachers.map(t => 
           t.id === id ? { ...t, name: editName, email: editEmail } : t
         ));
-        setEditingId(null);
+        cancelEdit();
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         alert('Failed to update teacher: ' + errorData.message);
@@ -110,6 +117,7 @@ export function ManageTeachers() {
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Address</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</th>
                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -139,6 +147,21 @@ export function ManageTeachers() {
                       <div className="text-sm text-gray-500">{teacher.email}</div>
                     )}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {editingId === teacher.id ? (
+                      <input
+                        className="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={editPassword}
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="Leave blank to keep current"
+                        onChange={(e) => setEditPassword(e.target.value)}
+                        aria-label={`New password for ${teacher.name}`}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-500">Hidden</div>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     {editingId === teacher.id ? (
                       <div className="flex justify-end space-x-2">
@@ -164,7 +187,7 @@ export function ManageTeachers() {
               ))}
               {teachers.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                     No teachers found. Go back to the dashboard to add some!
                   </td>
                 </tr>

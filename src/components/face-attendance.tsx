@@ -3,8 +3,9 @@ import { ArrowLeft, Camera, CheckCircle2, Loader2, ScanFace, ShieldAlert } from 
 import { useNavigate } from 'react-router-dom';
 import * as faceapi from 'face-api.js';
 import { ATTENDANCE_KEY, ATTENDANCE_UPDATED_EVENT, getAttendanceRecords, getTodayPresentIds } from '../data/local-attendance';
+import { useAuth } from '../hooks/use-auth';
 
-type Student = { id: string; name: string; grade?: string; faceEnrolledAt?: string };
+type Student = { id: string; name: string; grade?: string; teacherId?: string; faceEnrolledAt?: string };
 type Result = { kind: 'success' | 'error' | 'info'; message: string };
 
 const API = 'http://localhost:5001/api';
@@ -13,8 +14,10 @@ const FACE_PROFILES_KEY = 'face-attendance-profiles';
 
 export function FaceAttendance() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const autoRecognitionPendingRef = useRef(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState('');
   const [modelsReady, setModelsReady] = useState(false);
@@ -37,13 +40,19 @@ export function FaceAttendance() {
     });
     fetch(`${API}/students`).then(response => response.json()).then((data: Student[]) => {
       const profiles = getFaceProfiles();
-      setStudents(data.map(student => profiles[student.id] ? { ...student, faceEnrolledAt: 'local' } : student));
+      const visibleStudents = user?.role === 'admin'
+        ? data
+        : user?.role === 'teacher'
+          ? data.filter(student => student.teacherId === user.id)
+          : [];
+      setStudents(visibleStudents.map(student => profiles[student.id] ? { ...student, faceEnrolledAt: 'local' } : student));
     }).catch(() => setResult({ kind: 'error', message: 'Unable to load students.' }));
     setTodayCount(getTodayAttendance().length);
     return () => { mounted = false; stopCamera(); };
-  }, []);
+  }, [user]);
 
   const stopCamera = () => {
+    autoRecognitionPendingRef.current = false;
     streamRef.current?.getTracks().forEach(track => track.stop());
     streamRef.current = null;
     setCameraReady(false);
@@ -68,6 +77,7 @@ export function FaceAttendance() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
+      autoRecognitionPendingRef.current = true;
       setCameraReady(true);
       setResult({ kind: 'info', message: 'Camera ready. Center one face in the frame.' });
     } catch {
@@ -134,6 +144,12 @@ export function FaceAttendance() {
     } finally { setBusy(false); }
   };
 
+  useEffect(() => {
+    if (!cameraReady || !modelsReady || !autoRecognitionPendingRef.current) return;
+    autoRecognitionPendingRef.current = false;
+    void recognize();
+  }, [cameraReady, modelsReady]);
+
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-4 mb-8">
@@ -150,7 +166,10 @@ export function FaceAttendance() {
           </div>
           <div className="flex flex-wrap gap-3 mt-4">
             <button onClick={cameraReady ? stopCamera : startCamera} className="px-4 py-2 rounded-lg bg-white text-gray-900 font-medium hover:bg-gray-100">{cameraReady ? 'Stop camera' : 'Start camera'}</button>
-            <button onClick={recognize} disabled={busy} className="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-400 disabled:opacity-50">{busy ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Recognize & mark present'}</button>
+            <div className="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium flex items-center gap-2" role="status">
+              {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <ScanFace className="w-5 h-5" />}
+              {busy ? 'Recognizing face...' : 'Automatic recognition'}
+            </div>
           </div>
         </section>
 

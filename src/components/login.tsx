@@ -129,11 +129,12 @@ export function Login() {
       <div className="w-1/2 flex items-center justify-center p-8 bg-gray-50 min-w-[500px]">
         <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
           <div className="text-center mb-10">
+            <p className="text-sm font-bold tracking-widest text-indigo-600 mb-3">SAPPS</p>
             <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
-              Welcome Back
+              Sign in to SAPPS
             </h2>
             <p className="text-gray-500 font-medium">
-              We're glad to see you again. Sign in below.
+              Smart Attendance and Performance Prediction System
             </p>
           </div>
 

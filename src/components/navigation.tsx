@@ -28,7 +28,7 @@ export function Navigation() {
         <div className="min-h-16 py-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <div className="flex min-w-0 items-center">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-semibold text-blue-600 whitespace-nowrap">ParentTeacher Portal</h1>
+              <h1 className="text-xl font-semibold text-blue-600 whitespace-nowrap" title="Smart Attendance and Performance Prediction System">SAPPS</h1>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:flex-wrap sm:items-center sm:gap-x-6">
               {navItems.map((item) => {

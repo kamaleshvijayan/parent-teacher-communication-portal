@@ -1,7 +1,7 @@
 {
     "name": "parent-teacher-portal-server",
     "version": "1.0.0",
-    "description": "Backend API for Parent Teacher Communication Portal",
+    "description": "Backend API for SAPPS - Smart Attendance and Performance Prediction System",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
